@@ -13,12 +13,12 @@ const App = () => {
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyB-G5oLQBfNSMzH6kkNeqrZ1yXWP4sNHRQ",
-  authDomain: "my-chat-app-4a9a9.firebaseapp.com",
-  projectId: "my-chat-app-4a9a9",
-  storageBucket: "my-chat-app-4a9a9.appspot.com",
-  messagingSenderId: "22841810648",
-  appId: "1:22841810648:web:f3a041fefb5496350a41ad"
+  apiKey: process.env.EXPO_PUBLIC_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_APP_ID,
 };
 
 // Initialize Firebase
