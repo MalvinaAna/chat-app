@@ -3,8 +3,12 @@ import { StyleSheet, View, Text, Platform, KeyboardAvoidingView } from 'react-na
 import { GiftedChat, Bubble, InputToolbar } from 'react-native-gifted-chat';
 import { collection, addDoc, onSnapshot, query, orderBy } from "firebase/firestore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CustomActions from './CustomActions';
+import MapView from 'react-native-maps';
 
-const Chat = ({ db, route, navigation, isConnected }) => {
+
+
+const Chat = ({ db, route, navigation, isConnected, storage }) => {
 
  const { name, backgroundColor, userID } = route.params;
  const [messages, setMessages] = useState([]);
@@ -45,10 +49,35 @@ const renderInputToolbar = (props) => {
   else return null;
  }
 
+ const renderCustomActions = (props) => {
+  return <CustomActions storage={storage} userID={userID} onSend={onSend} {...props} />;
+};
+
+const renderCustomView = (props) => {
+  const { currentMessage} = props;
+  if (currentMessage.location) {
+    return (
+        <MapView
+          style={{width: 150,
+            height: 100,
+            borderRadius: 13,
+            margin: 3}}
+          region={{
+            latitude: currentMessage.location.latitude,
+            longitude: currentMessage.location.longitude,
+            latitudeDelta: 0.0922,
+            longitudeDelta: 0.0421,
+          }}
+        />
+    );
+  }
+  return null;
+}
+
 // useEffect to set messages options
 useEffect(() => {
   navigation.setOptions({ title: name, color: backgroundColor });
-}, []);
+}, [name, backgroundColor]);
 
 let unsubMessages;
 
@@ -64,11 +93,20 @@ useEffect(() => {
   unsubMessages = onSnapshot(q, (docs) => {
   let newMessages = [];
   docs.forEach(doc => {
-      newMessages.push({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: new Date(doc.data().createdAt.toMillis())
-      })
+    try {
+      if (doc.exists()) {
+        const data = doc.data();
+        newMessages.push({
+          _id: doc.id,
+          ...data,
+          text: data.text || '',
+          createdAt: data.createdAt ? new Date(data.createdAt.toMillis()) : new Date(),
+          user: data.user || {},
+        });
+      }
+    } catch (error) {
+      console.error(`Error processing document ${doc.id}:`, error);
+    }
     })
     cacheMessages(newMessages);
     setMessages(newMessages);
@@ -88,6 +126,8 @@ useEffect(() => {
       renderBubble={renderBubble}
       renderInputToolbar={renderInputToolbar}
       onSend={messages => onSend(messages)}
+      renderActions={renderCustomActions}
+      renderCustomView={renderCustomView}
       user={{
         _id: userID,
         name: name
